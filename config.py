@@ -1,10 +1,21 @@
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+CONFIG_DIR = os.path.dirname(os.path.abspath(__file__))
+ROOT_DIR = os.path.dirname(CONFIG_DIR)
+DATA_DIR = os.path.join(ROOT_DIR, 'data')
+
 # Exports
-LATEST_EXPORT = ""
-PREVIOUS_EXPORT = ""
+LATEST_EXPORT = "https://raw.githubusercontent.com/sola8/PCL-Exports/master/PCL-S25_Round2.json"
+PREVIOUS_EXPORT = "https://raw.githubusercontent.com/sola8/PCL-Exports/master/PCL-S25_Round1.json"
 OUTPUT_EXPORT_LOCATION = ""
 
 # Bot Tokens
+BOT_TOKEN = os.getenv("DISCORD_BOT_TOKEN")
 
+# Database Info
 DB_URL = {}
 DB_NAME = None
 
