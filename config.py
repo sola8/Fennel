@@ -8,7 +8,8 @@ ROOT_DIR = os.path.dirname(CONFIG_DIR)
 DATA_DIR = os.path.join(ROOT_DIR, 'data')
 
 # Exports
-LATEST_EXPORT = "https://raw.githubusercontent.com/nbsl-league/PCL-Exports/master/PCL-S26_FirstCatch.json"
+
+LATEST_EXPORT = "https://raw.githubusercontent.com/nbsl-league/PCL-Exports/master/PCL-S25_Finals.json"
 PREVIOUS_EXPORT = ""
 OUTPUT_EXPORT_LOCATION = ""
 
