@@ -1,9 +1,9 @@
 
 STATS_TO_AVERAGE = ['pts', 
-                    'reb',
                     'ast',
                     'stl',
-                    'reb'
+                    'orb',
+                    'drb'
                     ]
 
 TEAM_MAP = {
