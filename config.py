@@ -9,7 +9,7 @@ DATA_DIR = os.path.join(ROOT_DIR, 'data')
 
 # Exports
 
-LATEST_EXPORT = "https://raw.githubusercontent.com/nbsl-league/PCL-Exports/master/PCL-S25_Finals.json"
+LATEST_EXPORT = "https://raw.githubusercontent.com/nbsl-league/PCL-Exports/master/PCL-S26_ThirdCatch.json"
 PREVIOUS_EXPORT = ""
 OUTPUT_EXPORT_LOCATION = ""
 
