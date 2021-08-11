@@ -16,13 +16,13 @@ class Test(commands.Cog):
 
     # Search for player using pid or name
     # Make a command group for this?
+    # Need to handle retired pokemon and free agents
+    # Also handle nicknames
     # Player bios, awards, ratings, stats (basic/advanced)
     # Progressions and splits?
     # Use hex info in export to determine embed color for each player
     @commands.command(aliases=('p',))
     async def player(self, ctx, arg):
-
-        season = main.get_season()
 
         def find_player_name(player):
             if len(player['lastName']) == 0:
@@ -30,6 +30,41 @@ class Test(commands.Cog):
             if len(player['firstName']) == 0:
                 return player['lastName'].strip()
             return player['firstName'].strip() + " " + player['lastName'].strip()
+
+        def grab_season_averages(stats):
+            average_stats = []
+
+            for metric in STATS_TO_AVERAGE:
+                for stat in stats:
+                    if stat['playoffs'] is False and stat['season'] == main.get_season():
+
+                        if stat['gp'] != 0:
+                            average = round(stat[metric]/stat['gp'], 1)
+                            average_stats.append(average)
+                        else:
+                            average_stats.append(0)
+                            
+            return average_stats
+
+        def grab_career_averages(stats):
+            average_career_stats = []
+
+            average_games = float(sum(
+                                [stat['gp'] for stat in stats if stat['gp'] > 0 and stat['playoffs'] is False]))
+
+            for metric in STATS_TO_AVERAGE:
+                average = float(sum(
+                                [stat[metric] for stat in stats if stat['gp'] > 0 and stat['playoffs'] is False]))
+
+                # Find a more elegant way to handle players who haven't played
+                if average_games == 0:
+                    total = average/1
+                else:
+                    total = average/average_games
+
+                average_career_stats.append(round(total, 1))
+                
+            return average_career_stats
 
         arg = arg.strip()
 
@@ -58,10 +93,15 @@ class Test(commands.Cog):
                     for index, i_player in indexed_players:
                         if int(msg.content) == index:
                             player = i_player
+            else:
+                player = player[0]
 
+        statline = grab_season_averages(player['stats'])
+        statline_2 = grab_career_averages(player['stats'])        
+        
         stats = player['stats'][-1]
         ratings = player['ratings'][-1]    
-        team = list(filter(lambda team: team['tid'] or stats['tid'] == player['tid'], main.export['teams']))[0]
+        team = list(filter(lambda team: team['tid'] == player['tid'] or team['tid'] == stats['tid'], main.export['teams']))[0]
 
         physical_ratings = (
             f"**Hgt:** {ratings['hgt']}",
@@ -90,18 +130,37 @@ class Test(commands.Cog):
 
         )
 
+        if not statline:
+            season_statline = "N/A"
+        else:
+            season_statline = f"{statline[0]} pts - {statline[1]} ast - {statline[3] + statline[4]} trb - {statline[2]} stl"
+
+        if not statline_2:
+            career_statline = "N/A"
+        else:
+            career_statline = f"{statline_2[0]} pts - {statline_2[1]} ast - {statline_2[3] + statline_2[4]} trb - {statline_2[2]} stl"
+
         player_info = f'{stats["jerseyNumber"]} | {find_player_name(player)}'
         team_info = f'{team["region"]} {team["name"]}'
 
-        embed = discord.Embed(title=player_info, description=f"**{ratings['pos']}** | {team_info}")
+        team_color = int(team['colors'][0].replace("#", ""),16)
+        embedColor = int(hex(team_color), 0)
 
-        if team is not None:
-            embed.set_thumbnail(url=team['imgURL'])
+        embed = discord.Embed(title=player_info, 
+                              description=f"**{ratings['pos']}** | {team_info}",
+                              color=embedColor)
 
-        embed.add_field(name="__Physical__", value="\n".join(physical_ratings))
-        embed.add_field(name="__Shooting__", value="\n".join(shooting_ratings))
-        embed.add_field(name="__Skill__", value="\n".join(skill_ratings))
-        embed.set_image(url=player['imgURL'])
+        # if team is not None:
+        embed.set_thumbnail(url=player['imgURL'])
+
+        embed.add_field(name="Physical", value="\n".join(physical_ratings))
+        embed.add_field(name="Shooting", value="\n".join(shooting_ratings))
+        embed.add_field(name="Skill", value="\n".join(skill_ratings))
+        embed.add_field(name=f"{main.get_season()}:", value=season_statline)
+        embed.add_field(name=f"Career:", value=f"{career_statline}", inline=False)
+        # embed.set_image(url=player['imgURL'])
+
+        embed.set_footer(text=f"Displaying {player['firstName']}\nPID: {player['pid']}")
 
         await ctx.channel.send(embed=embed)
 
@@ -117,4 +176,3 @@ class Test(commands.Cog):
 
 def setup(bot):
     bot.add_cog(Test(bot))
-    
