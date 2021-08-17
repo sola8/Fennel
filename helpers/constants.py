@@ -1,11 +1,3 @@
-
-STATS_TO_AVERAGE = ['pts', 
-                    'ast',
-                    'stl',
-                    'orb',
-                    'drb'
-                    ]
-
 TEAM_MAP = {
 
     "Anistar Jigglypuffs": 0,

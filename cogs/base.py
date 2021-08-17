@@ -12,7 +12,8 @@ class Base(commands.Cog):
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx, ex):
-        pass
+        print(ex)
+        await ctx.send("Nah.")
 
     @commands.Cog.listener()
     async def on_error(self, ctx, ex):
