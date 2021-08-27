@@ -28,7 +28,7 @@ TEAM_MAP = {
     "Undella Volcaronas": 25,
     "Twinleaf Togepis": 26,
     "Vermillion Sylveons": 27,
-    "Virbank Garbodors": 28,
+    "Humilau Cloysters": 28,
     "Viridian Ninetales": 29,
 
 }

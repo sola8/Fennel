@@ -45,50 +45,48 @@ class Test(commands.Cog):
         else:
             player = player[0]
 
-        season_stat = fetch.grab_season_stats(player['stats'])
-        career_stat = fetch.grab_career_stats(player['stats'])        
-        
-        stats = player['stats'][-1]
-        ratings = player['ratings'][-1]
-    
-        team = list(filter(lambda team: team['tid'] == player['tid'] or team['tid'] == stats['tid'], main.export['teams']))[0]
+        player = fetch.fetch_player_data(player['pid'])
+        team = fetch.fetch_team_data(player['tid'])
 
-        if team is None:
-            team['region'] = "N/A"
-            team['name'] = None
+        # Replace everything w/ fetch_team and fetch_player functions
+
+        if not player['current_stats']:
+            embedColor = discord.Colour.dark_purple()
+        else:
+            stats = player['stats'][-1]
+            team = list(filter(lambda team: team['tid'] == player['tid'] or team['tid'] == stats['tid'], main.export['teams']))[0]
+            team_color = int(team['colors'][0].replace("#", ""),16)
+            embedColor = int(hex(team_color), 0)
 
         physical_ratings = (
-            f"**Hgt:** {ratings['hgt']}",
-            f"**Str:** {ratings['stre']}",
-            f"**Spd:** {ratings['spd']}",
-            f"**Jmp:** {ratings['jmp']}",
-            f"**End:** {ratings['endu']}" 
+            f"**Hgt:** {player['ratings']['hgt']}",
+            f"**Str:** {player['ratings']['str']}",
+            f"**Spd:** {player['ratings']['spd']}",
+            f"**Jmp:** {player['ratings']['jmp']}",
+            f"**End:** {player['ratings']['end']}" 
 
         )
 
         shooting_ratings = (
-            f"**Ins:** {ratings['ins']}",
-            f"**Dnk:** {ratings['dnk']}",
-            f"**FT:** {ratings['ft']}",
-            f"**2PT:** {ratings['fg']}",
-            f"**3PT:** {ratings['tp']}" 
+            f"**Ins:** {player['ratings']['ins']}",
+            f"**Dnk:** {player['ratings']['dnk']}",
+            f"**FT:** {player['ratings']['ft']}",
+            f"**2PT:** {player['ratings']['fg']}",
+            f"**3PT:** {player['ratings']['']}" 
 
         )
 
         skill_ratings = (
-            f"**oIQ:** {ratings['oiq']}",
-            f"**dIQ:** {ratings['diq']}",
-            f"**Drb:** {ratings['drb']}",
-            f"**Pss:** {ratings['pss']}",
-            f"**Reb:** {ratings['reb']}" 
+            f"**oIQ:** {player['ratings']['oiq']}",
+            f"**dIQ:** {player['ratings']['diq']}",
+            f"**Drb:** {player['ratings']['drb']}",
+            f"**Pss:** {player['ratings']['pss']}",
+            f"**Reb:** {player['ratings']['reb']}" 
 
         )
 
-        team_color = int(team['colors'][0].replace("#", ""),16)
-        embedColor = int(hex(team_color), 0)
-
-        embed = discord.Embed(title=f'{stats["jerseyNumber"]} | {utils.find_player_name(player)}', 
-                              description=f"**{ratings['pos']}** | {team['region']} {team['name']}\n**OVR:** {ratings['ovr']} | **POT:** {ratings['pot']}",
+        embed = discord.Embed(title=f'{player["jerseyNumber"]} | {utils.find_player_name(player)}', 
+                              description=f"**{player['ratings']['pos']}** | {team['name']}\n**OVR:** {player['ratings']['ovr']} | **POT:** {player['ratings']['pot']}",
                               color=embedColor)
 
         embed.set_thumbnail(url=player['imgURL'])
@@ -98,13 +96,13 @@ class Test(commands.Cog):
         embed.add_field(name="Skill", value="\n".join(skill_ratings))
 
         embed.add_field(name=f"{main.get_season()}:", 
-                        value=f"{season_stat['pts']} pts, {season_stat['orb'] + season_stat['drb']} trb, {season_stat['ast']} ast, {season_stat['per']} PER")
+                        value=f"{player['current_stats']['pts']} pts, {player['current_stats']['orb'] + player['current_stats']['drb']} trb, {player['current_stats']['ast']} ast, {player['current_stats']['per']} PER")
 
         embed.add_field(name=f"Career:", 
-                        value=f"{career_stat['pts']} pts, {career_stat['orb'] + career_stat['drb']} trb, {career_stat['ast']} ast, {career_stat['per']} PER, {career_stat['ws']} WS", 
+                        value=f"{player['career_stats']['pts']} pts, {player['career_stats']['orb'] + player['career_stats']['drb']} trb, {player['career_stats']['ast']} ast, {player['career_stats']['per']} PER, {player['career_stats']['ws']} WS", 
                         inline=False)
 
-        embed.set_footer(text=f"Displaying {player['firstName']}\nPID: {player['pid']}")
+        embed.set_footer(text=f"Displaying {player['name']}\nPID: {player['pid']}")
 
         await ctx.channel.send(embed=embed)
 
@@ -114,8 +112,13 @@ class Test(commands.Cog):
     # SOS, Pyramid, Advanced Stats?
     # Use hex info in export to determine embed color for each team
     @commands.command(aliases=('t',))
-    async def team(self, ctx, tid: int, year: int = main.get_season()):
-        pass
+    async def team(self, ctx, arg, year=main.get_season()):
+
+        team = await converters.TeamConverter().convert(ctx, arg)
+        roster = fetch.fetch_team_data(team['tid'], year)
+        roster_table = utils.create_roster_table(roster)
+
+        await ctx.channel.send(f'```{roster_table}```')
         # Not sure if I need an embed for this (yet)
 
 def setup(bot):

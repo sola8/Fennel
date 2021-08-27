@@ -38,6 +38,16 @@ with urllib.request.urlopen(req) as f:
         schedule = export['schedule']
         return schedule
 
+    def is_playoff(stat):
+        return (stat['playoffs'] is True 
+                and stat['season'] == get_season() 
+                and stat['gp'] > 0)
+
+    def is_regseason(stat, season=get_season()):
+        return (stat['playoffs'] is False 
+                and stat['season'] == season 
+                and stat['gp'] > 0)
+
 # Load cogs
 for filename in os.listdir("./cogs"):
     if filename.endswith(".py") and filename != "__init__.py":
