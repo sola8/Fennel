@@ -1,7 +1,8 @@
+from discord import player
 import numpy as np
 from decimal import Decimal as dec
 
-import main
+from main import get_teams, get_players, get_season, is_regseason
 from . import utils
 
 STATS_TO_AVERAGE = ['pts', 'orb', 'drb', 'ast']
@@ -12,7 +13,7 @@ def regCount(stats):
                and stat['gp'] > 0 
                for stat in stats)
 
-def fetch_current_season_stats(stats, season=main.get_season()):
+def fetch_current_season_stats(stats, season=get_season()):
 
     season_stats = {
         
@@ -26,22 +27,22 @@ def fetch_current_season_stats(stats, season=main.get_season()):
 
     }
 
-    games_played = sum([stat['gp'] for stat in stats if main.is_regseason(stat, season)])
+    games_played = sum([stat['gp'] for stat in stats if is_regseason(stat, season)])
 
     if games_played == 0:
         return season_stats
             
     for metric in STATS_TO_AVERAGE:
-        season_stats[metric] = dec(sum([stat[metric] for stat in stats if main.is_regseason(stat, season)])/games_played)
+        season_stats[metric] = dec(sum([stat[metric] for stat in stats if is_regseason(stat, season)])/games_played)
 
-    season_stats['per'] = np.mean([[stat['per'] for stat in stats if main.is_regseason(stat, season)]])
+    season_stats['per'] = np.mean([[stat['per'] for stat in stats if is_regseason(stat, season)]])
 
     # Round all values in dict
     season_stats = {key: round(value, 1) for key, value in season_stats.items()}
                             
     return season_stats
 
-def fetch_career_stats(stats, season=main.get_season()):
+def fetch_career_stats(stats, season=get_season()):
 
     career_stats = {
         
@@ -73,13 +74,15 @@ def fetch_career_stats(stats, season=main.get_season()):
                 
     return career_stats
 
-def fetch_player_data(pid, season=main.get_season()):
+def fetch_player_data(pid, season=get_season()):
     # If on team,
     # Grab first name, last name, jersey number, season averages 
     playerDict = {
-
+        
+        'pid': None,
+        'tid': None,
         'season': None,
-        'jerseyNumber': None,
+        'jerseyNumber': "[-]",
         'name': None,
         'pos': None,
         'age': None,
@@ -96,13 +99,23 @@ def fetch_player_data(pid, season=main.get_season()):
     }
 
     # Slow -- need to improve on this for roster command
-    player = list(filter(lambda player: player["pid"] == pid, main.get_players()))[0]
+    try:
+        player = list(filter(lambda player: player["pid"] == pid, get_players()))[0]
+    except IndexError:
+        return playerDict
 
     # General
     playerDict['season'] = season
     playerDict['name'] = utils.find_player_name(player)
     playerDict['imgURL'] = player["imgURL"]
-    playerDict['item'] = player["college"]
+
+    if not player["college"]:
+        pass
+    else:
+        playerDict['item'] = player["college"]
+
+    playerDict['pid'] = player["pid"]
+    playerDict['tid'] = player["tid"]
 
     # Stats
     for stat in player["stats"]:
@@ -122,72 +135,59 @@ def fetch_player_data(pid, season=main.get_season()):
             playerDict['pot'] = rating["pot"]
             playerDict['pos'] = rating["pos"]
 
+    if not playerDict['ratings']:
+
+        playerDict['ratings'] = player['ratings'][-1]
+
+        try:
+            playerDict['jerseyNumber'] = player['stats'][-1]['jerseyNumber']
+        except IndexError:
+            pass
+
     # Born
     playerDict['age'] = season - player["born"]["year"]
     playerDict['type'] = player["born"]["loc"].split(' ')[0]
 
-    try:
-        playerDict['ability'] = utils.find_player_ability(player)
-    except IndexError:
-        pass
+    playerDict['ability'] = utils.find_player_ability(player)
 
     return playerDict
 
-def fetch_team_data(tid, season=main.get_season()):
+def fetch_team_data(tid, season=get_season()):
 
     teamDict = {
 
         'name': None,
-        'record': None,
-        'teamRating': None,
         'imgURL': None,
-        'roster': []
+        'colors': [],
 
     }
 
-    team = list(filter(lambda team: team['tid'] == tid, main.export['teams']))[0]
+    try: 
+        team = list(filter(lambda team: team['tid'] == tid, get_teams()))[0]
 
-    teamDict['name'] = team['region'] + " " + team['name']
-    teamDict['imgURL'] = team['imgURL']
+    except IndexError:
 
-    for player in main.get_players():
-        tempTID = None
-        for stat in player['stats']:
-            if stat['season'] == season:
-                tempTID = stat['tid']
-        if tempTID == tid and player['tid'] > -1:
-            teamDict['roster'].append(fetch_player_data(player['pid'], season))
+        if tid == -1:
+            teamDict['name'] = "Free Agent"
+
+        if tid == -2:
+            teamDict['name'] = "Undrafted"
+        
+        if tid == -3:
+            teamDict['name'] = "Retired"
+
+        return teamDict
 
     for year in team["seasons"]:
         if year["season"] == season:
-            teamDict['record'] = str(year["won"]) + "-" + str(year["lost"])
-            teamDict['teamRating'] = utils.calculate_team_rating(teamDict)
+            teamDict['name'] = team["region"] + " " + team["name"]
+            teamDict['imgURL'] = team["imgURL"]
+            teamDict['colors'] = team["colors"]
 
     return teamDict
-    
-def create_roster_table(teamDict):
-    
-    roster = []
-    teamDict['roster'] = sorted(teamDict['roster'], key=lambda k: k['ovr'], reverse=True)
 
-    for player in teamDict['roster']:
-
-        player_line = []
-        
-        # Find a better way to do this...
-
-        player_line.append(player['jerseyNumber'])
-        player_line.append(player['name'])
-        player_line.append(player['pos'])
-        player_line.append(player['age'])
-        player_line.append(player['ovr'])
-        player_line.append(player['pot'])
-        
-        player_line.append(player['current_stats']['pts'])
-        player_line.append(player['current_stats']['drb'] + player['current_stats']['orb'])
-        player_line.append(player['current_stats']['ast'])
-        player_line.append(player['current_stats']['per'])
-
-        roster.append(player_line)
-
-    return roster
+def fetch_free_agents():
+    player = list(filter(lambda player: player['tid'] == -1, get_players()))
+    cleaned_players = [fetch_player_data(play['pid']) for play in player]
+    sorted_pool = sorted(cleaned_players, key=lambda k: k['ovr'], reverse=True) 
+    return sorted_pool

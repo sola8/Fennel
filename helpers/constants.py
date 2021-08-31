@@ -32,3 +32,25 @@ TEAM_MAP = {
     "Viridian Ninetales": 29,
 
 }
+
+TYPES = [
+    None,
+    "Normal",
+    "Fighting",
+    "Flying",
+    "Poison",
+    "Ground",
+    "Rock",
+    "Bug",
+    "Ghost",
+    "Steel",
+    "Fire",
+    "Water",
+    "Grass",
+    "Electric",
+    "Psychic",
+    "Ice",
+    "Dragon",
+    "Dark",
+    "Fairy"
+]
