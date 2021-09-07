@@ -18,6 +18,22 @@ class PlayerConverter(commands.Converter):
 
         return player
 
+
+class PokemonConverter(commands.Converter):
+    async def convert(self, ctx, arg):
+        arg = arg.strip().lower()
+
+        if arg.isdigit():
+            arg = int(arg)
+            player = list(filter(lambda player: player['pid'] == arg, get_players()))
+                    
+        elif type(arg) == str:
+            player = list(filter(lambda player: utils.find_player_name(player).lower() == arg or
+                                                utils.find_player_nickname(player) == arg, get_players()))
+
+        return player
+
+
 # Return tid instead?
 # For later, not doing rosters anymore
 class TeamConverter(commands.Converter):

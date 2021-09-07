@@ -6,6 +6,8 @@ from main import get_teams, get_players, get_season, is_regseason
 from . import utils
 
 STATS_TO_AVERAGE = ['pts', 'orb', 'drb', 'ast']
+RARITY = ['Common', 'Uncommon', 'Rare', 'Pseudo', 'Ultra Beast', 'Legendary', 'Mythical']
+SHORTHAND_RARITY = ['C', 'U', 'R', 'P', 'UB', 'L', 'M']
 
 # Checks and Counters
 def regCount(stats):
@@ -84,11 +86,12 @@ def fetch_player_data(pid, season=get_season()):
         'season': None,
         'jerseyNumber': "[-]",
         'name': None,
+        'type': None,
         'pos': None,
         'age': None,
         'ovr': None,
         'pot': None,
-        'type': None,
+        'rarity': None,
         'ability': None,
         'item': None,
         'imgURL': None,
@@ -107,6 +110,7 @@ def fetch_player_data(pid, season=get_season()):
     # General
     playerDict['season'] = season
     playerDict['name'] = utils.find_player_name(player)
+    playerDict['rarity'] = utils.find_player_rarity(player)
     playerDict['imgURL'] = player["imgURL"]
 
     if not player["college"]:

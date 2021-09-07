@@ -18,7 +18,7 @@ class WildGrassPages(menus.ListPageSource):
     async def format_page(self, menu, entries):
         offset = menu.current_page * self.per_page
 
-        lines = [f'`{i+1}` **{v["name"]}** | {v["type"]} | {v["age"]} | {v["ovr"]}/{v["pot"]}' 
+        lines = [f"`{i+1}` **{v['name']}**　•　{v['rarity']}　•　{v['type']}　•　{v['age']}　•　{v['ovr']}/{v['pot']}"
                 for i, v in enumerate(entries, start=offset)]
 
         footer = f"Showing entries {offset + 1}–{offset + len(lines)}"

@@ -5,6 +5,7 @@ __pycache__/
 .DS_Store
 
 config.py
+discord.py/
 
 # C extensions
 *.so

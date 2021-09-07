@@ -9,6 +9,7 @@ DATA_DIR = os.path.join(ROOT_DIR, 'data')
 
 # Exports
 
+# Get this info from data/__init__.py
 LATEST_EXPORT = "https://raw.githubusercontent.com/nbsl-league/PCL-Exports/master/PCL-S27_ThirdCatch.json"
 PREVIOUS_EXPORT = ""
 OUTPUT_EXPORT_LOCATION = ""

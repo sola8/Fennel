@@ -22,6 +22,9 @@ def find_team_color(teamDict):
         
 def find_player_name(player):
 
+    if '(' in player['lastName']:
+        return player['firstName'].strip()
+
     if len(player['lastName']) == 0:
         return player['firstName'].strip()
 
@@ -49,7 +52,7 @@ def find_player_ability(player):
 def find_player_rarity(player):
     
     try:
-        rarity = find_player_name(player)
+        rarity = player['lastName']
         rarity = re.search('\(([^)]+)', rarity).group(1)
     except (AttributeError, IndexError):
         rarity = re.search('\(([^)]+)', rarity)
